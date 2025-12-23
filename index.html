@@ -1,165 +1,401 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Quick EN → AR Translator</title>
-  <style>
-    :root{
-      --bg:#0b0b0b;
-      --card:#121212;
-      --text:#e6eef8;
-      --muted:#9aa4b2;
-      --accent:#1e90ff;
-      --r:12px;
-      --shadow:0 10px 30px rgba(0,0,0,.6);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;padding:28px;background:var(--bg);color:var(--text);
-      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-    }
-    .wrap{max-width:900px;margin:0 auto}
-    h1{margin:6px 0 18px;color:var(--accent)}
-    .card{background:var(--card);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
-    textarea, input[type="text"]{
-      width:100%;padding:12px;border-radius:8px;border:1px solid #222;background:#0b0b0b;color:var(--text);
-      resize:vertical;font-size:15px;
-    }
-    button{padding:10px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-weight:600}
-    .result{min-height:80px;padding:12px;border-radius:8px;border:1px solid #222;background:#050505;color:var(--text);direction:rtl;text-align:right}
-    .small{font-size:13px;color:var(--muted);margin-top:8px}
-    .row{display:flex;gap:8px;align-items:center}
-  </style>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width,initial-scale=1" />
+ <title>Smart Translator (AR ↔️ EN)</title>
+ 
+ <style>
+   :root{
+     --bg:#0b1220;
+     --card:#0f1b33;
+     --text:#eaf0ff;
+     --muted:#a9b6d6;
+     --line:#203055;
+     --btn:#2b6cff;
+     --btn2:#1f2d50;
+     --shadow: 0 18px 50px rgba(0,0,0,.35);
+     --r:18px;
+   }
+   *{box-sizing:border-box}
+   body{
+     margin:0;
+     min-height:100vh;
+     background:
+       radial-gradient(1200px 600px at 20% 10%, #1b2a52 0%, transparent 60%),
+       radial-gradient(900px 500px at 90% 30%, #1a3b7a 0%, transparent 55%),
+       var(--bg);
+     color:var(--text);
+     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+     padding:28px;
+   }
+   .wrap{max-width:1100px;margin:0 auto;}
+   .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;}
+   .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.2px;font-size:18px;}
+   .badge{
+     display:inline-flex;align-items:center;gap:8px;
+     padding:8px 12px;background: rgba(43,108,255,.12);
+     border:1px solid rgba(43,108,255,.25);
+     color:#cfe0ff;border-radius:999px;font-size:13px;white-space:nowrap;
+   }
+   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+   @media (max-width: 900px){.grid{grid-template-columns:1fr}}
+   .card{
+     background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+     border:1px solid rgba(255,255,255,.08);
+     border-radius: var(--r);
+     box-shadow: var(--shadow);
+     overflow:hidden;
+   }
+   .cardHead{
+     display:flex;align-items:center;justify-content:space-between;gap:10px;
+     padding:14px;background: rgba(255,255,255,.03);
+     border-bottom:1px solid rgba(255,255,255,.08);
+   }
+   .langRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+   select{
+     background: rgba(255,255,255,.06);
+     color: var(--text);
+     border:1px solid rgba(255,255,255,.12);
+     border-radius: 12px;
+     padding:10px 12px;
+     font-size:14px;
+     outline:none;
+     cursor:pointer;
+   }
+   option{color:#000}
+   .btn{
+     border:none;border-radius: 12px;padding:10px 14px;font-size:14px;
+     cursor:pointer;color: var(--text);
+     background: rgba(255,255,255,.06);
+     border:1px solid rgba(255,255,255,.12);
+   }
+   .btnPrimary{
+     background: var(--btn);
+     border:1px solid rgba(255,255,255,.14);
+     font-weight:700;
+   }
+   .btnPrimary:disabled{opacity:.55;cursor:not-allowed;}
+   .hint{color: var(--muted);font-size:13px;}
+   textarea{
+     width:100%;
+     min-height:260px;
+     padding:16px;
+     border:none;
+     outline:none;
+     resize: vertical;
+     background: transparent;
+     color: var(--text);
+     font-size:16px;
+     line-height:1.6;
+   }
+   .footerRow{
+     display:flex;align-items:center;justify-content:space-between;gap:10px;
+     padding:12px 14px;
+     border-top:1px solid rgba(255,255,255,.08);
+     background: rgba(255,255,255,.02);
+   }
+   .status{color: var(--muted);font-size:13px;white-space:pre-wrap;}
+   .count{color: rgba(255,255,255,.55);font-size:12px;}
+   .pill{
+     display:inline-flex;align-items:center;gap:8px;
+     padding:8px 10px;border-radius:999px;
+     background: rgba(43,108,255,.10);
+     border:1px solid rgba(43,108,255,.22);
+     color:#cfe0ff;font-size:12px;white-space:nowrap;
+   }
+   .ghost{background: rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);}
+ </style>
 </head>
+ 
 <body>
-  <div class="wrap">
-    <h1>English → Arabic Translator</h1>
-
-    <div class="card">
-      <textarea id="text" placeholder="Type English word or short phrase here..."></textarea>
-      <div style="height:10px"></div>
-      <div class="row">
-        <button id="btn">Translate</button>
-        <div class="small">If the online API fails, a local fallback dictionary will be used automatically.</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="result" id="result">Arabic translation will appear here...</div>
-      <div class="small" id="status">Ready.</div>
-    </div>
-  </div>
-
-<script>
-/*
-  Strategy:
-  1) Try LibreTranslate POST (fast, allows CORS)
-  2) If network/error/timeout → fallback to local dictionary
-  3) This guarantees a visible translation when the API fails
-*/
-
-const btn = document.getElementById('btn');
-const txt = document.getElementById('text');
-const resEl = document.getElementById('result');
-const statusEl = document.getElementById('status');
-
-const fallbackDict = {
-  "red":"أحمر",
-  "blue":"أزرق",
-  "green":"أخضر",
-  "black":"أسود",
-  "white":"أبيض",
-  "cat":"قطة",
-  "dog":"كلب",
-  "book":"كتاب",
-  "sun":"شمس",
-  "moon":"قمر",
-  "hello":"مرحبا",
-  "how are you":"كيف حالك",
-  "thank you":"شكراً",
-  "yes":"نعم",
-  "no":"لا",
-  "apple":"تفاحة",
-  "car":"سيارة",
-  "school":"مدرسة",
-  "water":"ماء"
-};
-
-// helper: fallback lookup (exact or single-word partial)
-function lookupFallback(input){
-  const key = input.trim().toLowerCase();
-  if(!key) return null;
-  if(fallbackDict[key]) return fallbackDict[key];
-  // try single-word if input contains spaces
-  const parts = key.split(/\s+/);
-  if(parts.length>1 && fallbackDict[parts[0]]) return fallbackDict[parts[0]];
-  return null;
-}
-
-async function translateHandler(){
-  const input = txt.value.trim();
-  if(!input){
-    statusEl.textContent = "Please enter text to translate.";
-    return;
-  }
-
-  statusEl.textContent = "Translating (online)...";
-  resEl.textContent = "";
-
-  // timeout helper
-  function fetchWithTimeout(url, options={}, timeout=6000){
-    const controller = new AbortController();
-    const id = setTimeout(()=>controller.abort(), timeout);
-    return fetch(url, {...options, signal: controller.signal}).finally(()=>clearTimeout(id));
-  }
-
-  // LibreTranslate endpoint (no API key required for public instance)
-  const apiUrl = "https://libretranslate.de/translate";
-
-  try{
-    const resp = await fetchWithTimeout(apiUrl, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        q: input,
-        source: "en",
-        target: "ar",
-        format: "text"
-      })
-    }, 7000); // 7s timeout
-
-    if(!resp.ok) throw new Error("Network/Server error: "+resp.status);
-    const data = await resp.json();
-    if(data && data.translatedText){
-      resEl.textContent = data.translatedText;
-      statusEl.textContent = "Translated (live).";
-      return;
-    }else{
-      throw new Error("Invalid response");
-    }
-  }catch(err){
-    // fallback path
-    console.warn("Live translate failed:", err);
-    statusEl.textContent = "Live translate failed — using local fallback.";
-    const f = lookupFallback(input);
-    if(f){
-      resEl.textContent = f + "  (from local fallback)";
-    } else {
-      resEl.textContent = "Translation not found (API & local fallback failed).";
-    }
-  }
-}
-
-// attach
-btn.addEventListener('click', translateHandler);
-
-// also allow Enter inside textarea + ctrl+enter
-txt.addEventListener('keydown', function(e){
-  if((e.key === "Enter" && (e.ctrlKey || e.metaKey))) {
-    translateHandler();
-  }
-});
-</script>
+ <div class="wrap">
+   <div class="topbar">
+     <div class="brand">Smart Translator 🌍</div>
+     <div class="badge">Arabic ↔️ English • Auto Translate • Voice</div>
+   </div>
+ 
+   <div class="grid">
+     <!-- INPUT -->
+     <div class="card">
+       <div class="cardHead">
+         <div class="langRow">
+           <span class="pill" id="detectPill">Auto Detect: ON</span>
+ 
+           <select id="from">
+             <option value="auto" selected>Auto Detect</option>
+             <option value="ar">Arabic</option>
+             <option value="en">English</option>
+           </select>
+ 
+           <button class="btn ghost" id="swapBtn" type="button" title="Swap">↔️ Swap</button>
+ 
+           <select id="to">
+             <option value="en" selected>English</option>
+             <option value="ar">Arabic</option>
+           </select>
+         </div>
+ 
+         <div class="langRow">
+           <button class="btn ghost" id="micBtn" type="button" title="Speak (Speech to Text)">🎙️ Speak</button>
+         </div>
+       </div>
+ 
+       <textarea id="text" placeholder="اكتب النص هنا... / Type here..."></textarea>
+ 
+       <div class="footerRow">
+         <div class="status" id="status">جاهز.</div>
+         <div class="count" id="count">0 chars</div>
+       </div>
+     </div>
+ 
+     <!-- OUTPUT -->
+     <div class="card">
+       <div class="cardHead">
+         <div class="langRow">
+           <button class="btn btnPrimary" id="translateBtn" type="button">Translate ⚡</button>
+           <button class="btn ghost" id="copyBtn" type="button">Copy</button>
+           <button class="btn ghost" id="clearBtn" type="button">Clear</button>
+         </div>
+         <div class="hint">الترجمة هتظهر هنا 👇</div>
+       </div>
+ 
+       <textarea id="result" readonly placeholder="Result..."></textarea>
+ 
+       <div class="footerRow">
+         <div class="status" id="resultStatus">—</div>
+         <div class="count" id="resultCount">0 chars</div>
+       </div>
+     </div>
+   </div>
+ </div>
+ 
+ <script>
+   // ===== Helpers =====
+   const $ = (id) => document.getElementById(id);
+ 
+   const textEl = $("text");
+   const resultEl = $("result");
+   const fromEl = $("from");
+   const toEl = $("to");
+   const statusEl = $("status");
+   const resultStatusEl = $("resultStatus");
+   const translateBtn = $("translateBtn");
+   const swapBtn = $("swapBtn");
+   const copyBtn = $("copyBtn");
+   const clearBtn = $("clearBtn");
+   const micBtn = $("micBtn");
+   const countEl = $("count");
+   const resultCountEl = $("resultCount");
+   const detectPill = $("detectPill");
+ 
+   let debounceTimer = null;
+ 
+   function updateCounters(){
+     countEl.innerText = `${textEl.value.length} chars`;
+     resultCountEl.innerText = `${resultEl.value.length} chars`;
+   }
+ 
+   function setDetectUI(){
+     const on = fromEl.value === "auto";
+     detectPill.innerText = on ? "Auto Detect: ON" : "Auto Detect: OFF";
+     detectPill.style.opacity = on ? "1" : ".65";
+   }
+ 
+   // Detect Arabic by Unicode range; else English
+   function detectLang(text){
+     const hasArabic = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
+     return hasArabic ? "ar" : "en";
+   }
+ 
+   function setDir(){
+     // input direction
+     const src = (fromEl.value === "auto") ? detectLang(textEl.value || "") : fromEl.value;
+     if(src === "ar"){ textEl.dir="rtl"; textEl.style.textAlign="right"; }
+     else { textEl.dir="ltr"; textEl.style.textAlign="left"; }
+ 
+     // output direction based on target
+     if(toEl.value === "ar"){ resultEl.dir="rtl"; resultEl.style.textAlign="right"; }
+     else { resultEl.dir="ltr"; resultEl.style.textAlign="left"; }
+   }
+ 
+   // ===== Translation (MyMemory API) =====
+   async function translate(){
+     const text = textEl.value.trim();
+     if(!text){
+       statusEl.innerText = "اكتب نص الأول.";
+       resultStatusEl.innerText = "—";
+       resultEl.value = "";
+       updateCounters();
+       return;
+     }
+ 
+     let source = fromEl.value;
+     if(source === "auto") source = detectLang(text);
+ 
+     const target = toEl.value;
+ 
+     if(source === target){
+       statusEl.innerText = "اختار Target لغة مختلفة.";
+       resultStatusEl.innerText = "—";
+       return;
+     }
+ 
+     translateBtn.disabled = true;
+     statusEl.innerText = "Translating...";
+     resultStatusEl.innerText = "Working...";
+     resultEl.value = "";
+     updateCounters();
+     setDir();
+ 
+     try{
+       const url =
+         "https://api.mymemory.translated.net/get?q=" +
+         encodeURIComponent(text) +
+         "&langpair=" + encodeURIComponent(source + "|" + target);
+ 
+       const res = await fetch(url);
+       const data = await res.json();
+ 
+       const translated = data?.responseData?.translatedText ?? "";
+       resultEl.value = translated;
+ 
+       statusEl.innerText = `Source: ${source.toUpperCase()} → Target: ${target.toUpperCase()}`;
+       resultStatusEl.innerText = "Done ✅";
+     }catch(e){
+       statusEl.innerText = "مشكلة اتصال بالترجمة.";
+       resultStatusEl.innerText = (e?.message || e);
+     }finally{
+       translateBtn.disabled = false;
+       updateCounters();
+     }
+   }
+ 
+   // ===== Auto Translate (Debounce) =====
+   function scheduleAutoTranslate(){
+     clearTimeout(debounceTimer);
+     debounceTimer = setTimeout(() => {
+       // Auto translate only if there is text
+       if(textEl.value.trim()) translate();
+     }, 600);
+   }
+ 
+   // ===== Swap ↔️ =====
+   function swap(){
+     if(fromEl.value === "auto"){
+       // If auto: just flip target
+       toEl.value = (toEl.value === "ar") ? "en" : "ar";
+     }else{
+       const a = fromEl.value;
+       fromEl.value = toEl.value;
+       toEl.value = a;
+     }
+ 
+     // swap content
+     const t = textEl.value;
+     textEl.value = resultEl.value;
+     resultEl.value = t;
+ 
+     setDetectUI();
+     setDir();
+     updateCounters();
+     statusEl.innerText = "Swapped ↔️";
+     resultStatusEl.innerText = "—";
+   }
+ 
+   // ===== Copy / Clear =====
+   async function copyResult(){
+     const v = resultEl.value.trim();
+     if(!v){ resultStatusEl.innerText = "Nothing to copy."; return; }
+     try{
+       await navigator.clipboard.writeText(v);
+       resultStatusEl.innerText = "Copied ✅";
+     }catch{
+       resultStatusEl.innerText = "Copy failed.";
+     }
+   }
+ 
+   function clearAll(){
+     textEl.value = "";
+     resultEl.value = "";
+     statusEl.innerText = "Cleared.";
+     resultStatusEl.innerText = "—";
+     updateCounters();
+     setDir();
+   }
+ 
+   // ===== Speech to Text (Chrome / Edge) =====
+   function startSpeech(){
+     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+     if(!SpeechRec){
+       resultStatusEl.innerText = "Speech Recognition not supported in this browser.";
+       return;
+     }
+ 
+     // choose recognition language based on current source selection
+     let lang = fromEl.value;
+     if(lang === "auto"){
+       // if auto, guess from target: if target is English -> Arabic source likely, else English source likely
+       // but better: use current text direction guess; if empty -> default Arabic
+       lang = textEl.value.trim() ? detectLang(textEl.value) : "ar";
+     }
+     const recLang = (lang === "ar") ? "ar-EG" : "en-US";
+ 
+     const rec = new SpeechRec();
+     rec.lang = recLang;
+     rec.interimResults = false;
+     rec.maxAlternatives = 1;
+ 
+     statusEl.innerText = "Listening... 🎙️";
+     resultStatusEl.innerText = "—";
+ 
+     rec.onresult = (e) => {
+       const spoken = e.results?.[0]?.[0]?.transcript || "";
+       textEl.value = spoken;
+       updateCounters();
+       setDir();
+       translate(); // translate immediately after speech
+     };
+ 
+     rec.onerror = (e) => {
+       statusEl.innerText = "Voice error.";
+       resultStatusEl.innerText = e?.error || "Unknown error";
+     };
+ 
+     rec.onend = () => {
+       if(statusEl.innerText.startsWith("Listening")) statusEl.innerText = "جاهز.";
+     };
+ 
+     rec.start();
+   }
+ 
+   // ===== Events =====
+   translateBtn.addEventListener("click", translate);
+   swapBtn.addEventListener("click", swap);
+   copyBtn.addEventListener("click", copyResult);
+   clearBtn.addEventListener("click", clearAll);
+   micBtn.addEventListener("click", startSpeech);
+ 
+   textEl.addEventListener("input", () => {
+     updateCounters();
+     setDetectUI();
+     setDir();
+     scheduleAutoTranslate();
+   });
+ 
+   fromEl.addEventListener("change", () => {
+     setDetectUI();
+     setDir();
+   });
+ 
+   toEl.addEventListener("change", () => {
+     setDir();
+   });
+ 
+   // init
+   setDetectUI();
+   updateCounters();
+   setDir();
+ </script>
 </body>
 </html>
