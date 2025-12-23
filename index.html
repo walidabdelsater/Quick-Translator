@@ -22,8 +22,8 @@
      margin:0;
      min-height:100vh;
      background:
-       radial-gradient(1200px 600px at 20% 10%, #1b2a52 0%, transparent 60%),
-       radial-gradient(900px 500px at 90% 30%, #1a3b7a 0%, transparent 55%),
+       radial-gradient(1200px 600px at 20% 10%, #32072c 0%, transparent 60%),
+       radial-gradient(900px 500px at 90% 30%, #45103d 0%, transparent 55%),
        var(--bg);
      color:var(--text);
      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
@@ -112,7 +112,7 @@
  <div class="wrap">
    <div class="topbar">
      <div class="brand">Quick Translator </div>
-     <div class="badge">Arabic ↔️ English • Auto Translate • </div>
+     <div class="badge">Arabic - English • Auto Translate • </div>
    </div>
  
    <div class="grid">
@@ -279,29 +279,7 @@
      }, 600);
    }
  
-   // ===== Swap ↔️ =====
-   function swap(){
-     if(fromEl.value === "auto"){
-       // If auto: just flip target
-       toEl.value = (toEl.value === "ar") ? "en" : "ar";
-     }else{
-       const a = fromEl.value;
-       fromEl.value = toEl.value;
-       toEl.value = a;
-     }
- 
-     // swap content
-     const t = textEl.value;
-     textEl.value = resultEl.value;
-     resultEl.value = t;
- 
-     setDetectUI();
-     setDir();
-     updateCounters();
-     statusEl.innerText = "Swapped ↔️";
-     resultStatusEl.innerText = "—";
-   }
- 
+
    // ===== Copy / Clear =====
    async function copyResult(){
      const v = resultEl.value.trim();
@@ -321,51 +299,6 @@
      resultStatusEl.innerText = "—";
      updateCounters();
      setDir();
-   }
- 
-   // ===== Speech to Text (Chrome / Edge) =====
-   function startSpeech(){
-     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-     if(!SpeechRec){
-       resultStatusEl.innerText = "Speech Recognition not supported in this browser.";
-       return;
-     }
- 
-     // choose recognition language based on current source selection
-     let lang = fromEl.value;
-     if(lang === "auto"){
-       // if auto, guess from target: if target is English -> Arabic source likely, else English source likely
-       // but better: use current text direction guess; if empty -> default Arabic
-       lang = textEl.value.trim() ? detectLang(textEl.value) : "ar";
-     }
-     const recLang = (lang === "ar") ? "ar-EG" : "en-US";
- 
-     const rec = new SpeechRec();
-     rec.lang = recLang;
-     rec.interimResults = false;
-     rec.maxAlternatives = 1;
- 
-     statusEl.innerText = "Listening... 🎙️";
-     resultStatusEl.innerText = "—";
- 
-     rec.onresult = (e) => {
-       const spoken = e.results?.[0]?.[0]?.transcript || "";
-       textEl.value = spoken;
-       updateCounters();
-       setDir();
-       translate(); // translate immediately after speech
-     };
- 
-     rec.onerror = (e) => {
-       statusEl.innerText = "Voice error.";
-       resultStatusEl.innerText = e?.error || "Unknown error";
-     };
- 
-     rec.onend = () => {
-       if(statusEl.innerText.startsWith("Listening")) statusEl.innerText = "جاهز.";
-     };
- 
-     rec.start();
    }
  
    // ===== Events =====
