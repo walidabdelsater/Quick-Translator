@@ -111,8 +111,8 @@
 <body>
  <div class="wrap">
    <div class="topbar">
-     <div class="brand">Smart Translator 🌍</div>
-     <div class="badge">Arabic ↔️ English • Auto Translate • Voice</div>
+     <div class="brand">Quick Translator </div>
+     <div class="badge">Arabic ↔️ English • Auto Translate • </div>
    </div>
  
    <div class="grid">
@@ -137,11 +137,11 @@
          </div>
  
          <div class="langRow">
-           <button class="btn ghost" id="micBtn" type="button" title="Speak (Speech to Text)">🎙️ Speak</button>
+          <button class="btn ghost" id="micBtn" type="button" title="Speak (Speech to Text)">🎙️ Speak</button>
          </div>
        </div>
  
-       <textarea id="text" placeholder="اكتب النص هنا... / Type here..."></textarea>
+       <textarea id="text" placeholder="اكتب هنا... / Type here..."></textarea>
  
        <div class="footerRow">
          <div class="status" id="status">جاهز.</div>
@@ -157,7 +157,7 @@
            <button class="btn ghost" id="copyBtn" type="button">Copy</button>
            <button class="btn ghost" id="clearBtn" type="button">Clear</button>
          </div>
-         <div class="hint">الترجمة هتظهر هنا 👇</div>
+         <div class="hint">الترجمة  </div>
        </div>
  
        <textarea id="result" readonly placeholder="Result..."></textarea>
@@ -223,7 +223,7 @@
    async function translate(){
      const text = textEl.value.trim();
      if(!text){
-       statusEl.innerText = "اكتب نص الأول.";
+       statusEl.innerText = "اكتب نص .";
        resultStatusEl.innerText = "—";
        resultEl.value = "";
        updateCounters();
