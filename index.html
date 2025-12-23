@@ -74,24 +74,32 @@ button.primary{
 
 <div class="card">
   <textarea id="result" readonly placeholder="Arabic translation will appear here..."></textarea>
-</div>
-
+</div> 
+  
 <script>
-async function translate(){
+async function translate() {
   const text = document.getElementById("text").value.trim();
-  if(!text) return;
+  if (!text) return;
 
-  const url =
-    "https://api.mymemory.translated.net/get?q=" +
-    encodeURIComponent(text) +
-    "&langpair=en|ar";
+  const url = "https://libretranslate.de/translate";
 
-  try{
-    const res = await fetch(url);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        q: text,
+        source: "en",
+        target: "ar",
+        format: "text"
+      })
+    });
+
     const data = await res.json();
-    document.getElementById("result").value =
-      data.responseData.translatedText;
-  }catch{
+    document.getElementById("result").value = data.translatedText;
+  } catch (e) {
     document.getElementById("result").value = "Translation error ❌";
   }
 }
