@@ -100,9 +100,9 @@
    .pill{
      display:inline-flex;align-items:center;gap:8px;
      padding:8px 10px;border-radius:999px;
-     background: rgba(43,108,255,.10);
-     border:1px solid rgba(43,108,255,.22);
-     color:#cfe0ff;font-size:12px;white-space:nowrap;
+     background: hsla(312, 84%, 15%, 0.1);
+     border:1px solid rgba(80, 15, 78, 0.22);
+     color:#5e104d;font-size:12px;white-space:nowrap;
    }
    .ghost{background: rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);}
  </style>
@@ -153,7 +153,7 @@
      <div class="card">
        <div class="cardHead">
          <div class="langRow">
-           <button class="btn btnPrimary" id="translateBtn" type="button">Translate ⚡</button>
+           <button class="btn btnPrimary" id="translateBtn" type="button">Translate </button>
            <button class="btn ghost" id="copyBtn" type="button">Copy</button>
            <button class="btn ghost" id="clearBtn" type="button">Clear</button>
          </div>
@@ -261,8 +261,7 @@
        resultEl.value = translated;
  
        statusEl.innerText = `Source: ${source.toUpperCase()} → Target: ${target.toUpperCase()}`;
-       resultStatusEl.innerText = "Done ✅";
-     }catch(e){
+      }catch(e){
        statusEl.innerText = "مشكلة اتصال بالترجمة.";
        resultStatusEl.innerText = (e?.message || e);
      }finally{
@@ -309,7 +308,7 @@
      if(!v){ resultStatusEl.innerText = "Nothing to copy."; return; }
      try{
        await navigator.clipboard.writeText(v);
-       resultStatusEl.innerText = "Copied ✅";
+       resultStatusEl.innerText = "Copied ";
      }catch{
        resultStatusEl.innerText = "Copy failed.";
      }
