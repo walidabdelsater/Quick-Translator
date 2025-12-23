@@ -1,19 +1,21 @@
 <!DOCTYPE html>
-<html lang="en" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
- <meta charset="UTF-8" />
- <meta name="viewport" content="width=device-width,initial-scale=1" />
- <title>Quick (EN ↔️ AR) Translator</title>
- <style>
-   :root{
-  --bg:#000000;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quick EN → AR Translator</title>
+
+<style>
+:root{
+  --bg:#000;
   --card:#121212;
-  --text:#ffffff;
-  --muted:#b0b0b0;
+  --text:#fff;
   --line:#2a2a2a;
   --btn:#1e90ff;
-  --btn2:#1a1a1a;
-  --shadow:0 10px 30px rgba(0
+  --r:14px;
+  --shadow:0 10px 30px rgba(0,0,0,.4);
+}
+
 *{box-sizing:border-box}
 
 body{
@@ -21,7 +23,7 @@ body{
   min-height:100vh;
   background:var(--bg);
   color:var(--text);
-  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-family:Segoe UI,Tahoma,Arial,sans-serif;
   padding:24px;
 }
 
@@ -30,343 +32,70 @@ body{
   border:1px solid var(--line);
   border-radius:var(--r);
   box-shadow:var(--shadow);
-}
-
-.cardHead{
-  background:#181818;
-  border-bottom:1px solid var(--line);
+  padding:16px;
+  margin-bottom:16px;
 }
 
 textarea{
-  background:transparent;
-  color:var(--text);
-  font-size:16px;
-}
-
-.btn{
-  background:#1c1c1c;
+  width:100%;
+  min-height:120px;
+  background:#000;
+  color:#fff;
   border:1px solid var(--line);
-  color:var(--text);
+  padding:10px;
+  border-radius:10px;
 }
 
-.btnPrimary{
+button{
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#1c1c1c;
+  color:#fff;
+  cursor:pointer;
+}
+
+button.primary{
   background:var(--btn);
-  font-weight:600;
+  font-weight:bold;
 }
-
-.btnPrimary:hover{
-  opacity:.9;
-}
-
-select{
-  background:#1c1c1c;
-  color:var(--text);
-  border:1px solid var(--line);
-}
-
-.footerRow{
-  background:#0e0e0e;
-  border-top:1px solid var(--line);
-}
-
-.pill{
-  background:#1c1c1c;
-  border:1px solid var(--line);
-  color:#ddd;
-}
-   .ghost{background: rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);}
- </style>
+</style>
 </head>
- 
+
 <body>
- <div class="wrap">
-   <div class="topbar">
-     <div class="brand">Smart Translator 🌍</div>
-     <div class="badge">English ↔️ Arabic • Auto Translate • Voice</div>
-   </div>
- 
-   <div class="grid">
-     <!-- INPUT -->
-     <div class="card">
-       <div class="cardHead">
-         <div class="langRow">
-           <span class="pill" id="detectPill">Auto Detect: ON</span>
- 
-           <select id="from">
-             <option value="auto" selected>Auto Detect</option>
-             <option value="ar">Arabic</option>
-             <option value="en">English</option>
-           </select>
- 
-           <button class="btn ghost" id="swapBtn" type="button" title="Swap">↔️ Swap</button>
- 
-           <select id="to">
-             <option value="en" selected>English</option>
-             <option value="ar">Arabic</option>
-           </select>
-         </div>
- 
-         <div class="langRow">
-           <button class="btn ghost" id="micBtn" type="button" title="Speak (Speech to Text)">🎙️ Speak</button>
-         </div>
-       </div>
- 
-       <textarea id="text" placeholder="اكتب النص هنا... / Type here..."></textarea>
- 
-       <div class="footerRow">
-         <div class="status" id="status">جاهز.</div>
-         <div class="count" id="count">0 chars</div>
-       </div>
-     </div>
- 
-     <!-- OUTPUT -->
-     <div class="card">
-       <div class="cardHead">
-         <div class="langRow">
-           <button class="btn btnPrimary" id="translateBtn" type="button">Translate ⚡</button>
-           <button class="btn ghost" id="copyBtn" type="button">Copy</button>
-           <button class="btn ghost" id="clearBtn" type="button">Clear</button>
-         </div>
-         <div class="hint">الترجمة هتظهر هنا 👇</div>
-       </div>
- 
-       <textarea id="result" readonly placeholder="Result..."></textarea>
- 
-       <div class="footerRow">
-         <div class="status" id="resultStatus">—</div>
-         <div class="count" id="resultCount">0 chars</div>
-       </div>
-     </div>
-   </div>
- </div>
- 
- <script>
-   // ===== Helpers =====
-   const $ = (id) => document.getElementById(id);
- 
-   const textEl = $("text");
-   const resultEl = $("result");
-   const fromEl = $("from");
-   const toEl = $("to");
-   const statusEl = $("status");
-   const resultStatusEl = $("resultStatus");
-   const translateBtn = $("translateBtn");
-   const swapBtn = $("swapBtn");
-   const copyBtn = $("copyBtn");
-   const clearBtn = $("clearBtn");
-   const micBtn = $("micBtn");
-   const countEl = $("count");
-   const resultCountEl = $("resultCount");
-   const detectPill = $("detectPill");
- 
-   let debounceTimer = null;
- 
-   function updateCounters(){
-     countEl.innerText = `${textEl.value.length} chars`;
-     resultCountEl.innerText = `${resultEl.value.length} chars`;
-   }
- 
-   function setDetectUI(){
-     const on = fromEl.value === "auto";
-     detectPill.innerText = on ? "Auto Detect: ON" : "Auto Detect: OFF";
-     detectPill.style.opacity = on ? "1" : ".65";
-   }
- 
-   // Detect Arabic by Unicode range; else English
-   function detectLang(text){
-     const hasArabic = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
-     return hasArabic ? "ar" : "en";
-   }
- 
-   function setDir(){
-     // input direction
-     const src = (fromEl.value === "auto") ? detectLang(textEl.value || "") : fromEl.value;
-     if(src === "ar"){ textEl.dir="rtl"; textEl.style.textAlign="right"; }
-     else { textEl.dir="ltr"; textEl.style.textAlign="left"; }
- 
-     // output direction based on target
-     if(toEl.value === "ar"){ resultEl.dir="rtl"; resultEl.style.textAlign="right"; }
-     else { resultEl.dir="ltr"; resultEl.style.textAlign="left"; }
-   }
- 
-   // ===== Translation (MyMemory API) =====
-   async function translate(){
-     const text = textEl.value.trim();
-     if(!text){
-       statusEl.innerText = "اكتب نص الأول.";
-       resultStatusEl.innerText = "—";
-       resultEl.value = "";
-       updateCounters();
-       return;
-     }
- 
-     let source = fromEl.value;
-     if(source === "auto") source = detectLang(text);
- 
-     const target = toEl.value;
- 
-     if(source === target){
-       statusEl.innerText = "اختار Target لغة مختلفة.";
-       resultStatusEl.innerText = "—";
-       return;
-     }
- 
-     translateBtn.disabled = true;
-     statusEl.innerText = "Translating...";
-     resultStatusEl.innerText = "Working...";
-     resultEl.value = "";
-     updateCounters();
-     setDir();
- 
-     try{
-       const url =
-         "https://api.mymemory.translated.net/get?q=" +
-         encodeURIComponent(text) +
-         "&langpair=" + encodeURIComponent(source + "|" + target);
- 
-       const res = await fetch(url);
-       const data = await res.json();
- 
-       const translated = data?.responseData?.translatedText ?? "";
-       resultEl.value = translated;
- 
-       statusEl.innerText = `Source: ${source.toUpperCase()} → Target: ${target.toUpperCase()}`;
-       resultStatusEl.innerText = "Done ✅";
-     }catch(e){
-       statusEl.innerText = "مشكلة اتصال بالترجمة.";
-       resultStatusEl.innerText = (e?.message || e);
-     }finally{
-       translateBtn.disabled = false;
-       updateCounters();
-     }
-   }
- 
-   // ===== Auto Translate (Debounce) =====
-   function scheduleAutoTranslate(){
-     clearTimeout(debounceTimer);
-     debounceTimer = setTimeout(() => {
-       // Auto translate only if there is text
-       if(textEl.value.trim()) translate();
-     }, 600);
-   }
- 
-   // ===== Swap ↔️ =====
-   function swap(){
-     if(fromEl.value === "auto"){
-       // If auto: just flip target
-       toEl.value = (toEl.value === "ar") ? "en" : "ar";
-     }else{
-       const a = fromEl.value;
-       fromEl.value = toEl.value;
-       toEl.value = a;
-     }
- 
-     // swap content
-     const t = textEl.value;
-     textEl.value = resultEl.value;
-     resultEl.value = t;
- 
-     setDetectUI();
-     setDir();
-     updateCounters();
-     statusEl.innerText = "Swapped ↔️";
-     resultStatusEl.innerText = "—";
-   }
- 
-   // ===== Copy / Clear =====
-   async function copyResult(){
-     const v = resultEl.value.trim();
-     if(!v){ resultStatusEl.innerText = "Nothing to copy."; return; }
-     try{
-       await navigator.clipboard.writeText(v);
-       resultStatusEl.innerText = "Copied ✅";
-     }catch{
-       resultStatusEl.innerText = "Copy failed.";
-     }
-   }
- 
-   function clearAll(){
-     textEl.value = "";
-     resultEl.value = "";
-     statusEl.innerText = "Cleared.";
-     resultStatusEl.innerText = "—";
-     updateCounters();
-     setDir();
-   }
- 
-   // ===== Speech to Text (Chrome / Edge) =====
-   function startSpeech(){
-     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-     if(!SpeechRec){
-       resultStatusEl.innerText = "Speech Recognition not supported in this browser.";
-       return;
-     }
- 
-     // choose recognition language based on current source selection
-     let lang = fromEl.value;
-     if(lang === "auto"){
-       // if auto, guess from target: if target is English -> Arabic source likely, else English source likely
-       // but better: use current text direction guess; if empty -> default Arabic
-       lang = textEl.value.trim() ? detectLang(textEl.value) : "ar";
-     }
-     const recLang = (lang === "ar") ? "ar-EG" : "en-US";
- 
-     const rec = new SpeechRec();
-     rec.lang = recLang;
-     rec.interimResults = false;
-     rec.maxAlternatives = 1;
- 
-     statusEl.innerText = "Listening... 🎙️";
-     resultStatusEl.innerText = "—";
- 
-     rec.onresult = (e) => {
-       const spoken = e.results?.[0]?.[0]?.transcript || "";
-       textEl.value = spoken;
-       updateCounters();
-       setDir();
-       translate(); // translate immediately after speech
-     };
- 
-     rec.onerror = (e) => {
-       statusEl.innerText = "Voice error.";
-       resultStatusEl.innerText = e?.error || "Unknown error";
-     };
- 
-     rec.onend = () => {
-       if(statusEl.innerText.startsWith("Listening")) statusEl.innerText = "جاهز.";
-     };
- 
-     rec.start();
-   }
- 
-   // ===== Events =====
-   translateBtn.addEventListener("click", translate);
-   swapBtn.addEventListener("click", swap);
-   copyBtn.addEventListener("click", copyResult);
-   clearBtn.addEventListener("click", clearAll);
-   micBtn.addEventListener("click", startSpeech);
- 
-   textEl.addEventListener("input", () => {
-     updateCounters();
-     setDetectUI();
-     setDir();
-     scheduleAutoTranslate();
-   });
- 
-   fromEl.addEventListener("change", () => {
-     setDetectUI();
-     setDir();
-   });
- 
-   toEl.addEventListener("change", () => {
-     setDir();
-   });
- 
-   // init
-   setDetectUI();
-   updateCounters();
-   setDir();
- </script>
+
+<h2>English → Arabic Translator 🌍</h2>
+
+<div class="card">
+  <textarea id="text" placeholder="Type English word here..."></textarea>
+  <br><br>
+  <button class="primary" onclick="translate()">Translate</button>
+</div>
+
+<div class="card">
+  <textarea id="result" readonly placeholder="Arabic translation will appear here..."></textarea>
+</div>
+
+<script>
+async function translate(){
+  const text = document.getElementById("text").value.trim();
+  if(!text) return;
+
+  const url =
+    "https://api.mymemory.translated.net/get?q=" +
+    encodeURIComponent(text) +
+    "&langpair=en|ar";
+
+  try{
+    const res = await fetch(url);
+    const data = await res.json();
+    document.getElementById("result").value =
+      data.responseData.translatedText;
+  }catch{
+    document.getElementById("result").value = "Translation error ❌";
+  }
+}
+</script>
+
 </body>
-https://github.com/walidabdelsater/Quick-Translator.git
-This website translates an unlimited number of words from English to Arabic.
+</html>
