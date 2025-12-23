@@ -1,109 +1,165 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quick EN → AR Translator</title>
-
-<style>
-:root{
-  --bg:#000;
-  --card:#121212;
-  --text:#fff;
-  --line:#2a2a2a;
-  --btn:#1e90ff;
-  --r:14px;
-  --shadow:0 10px 30px rgba(0,0,0,.4);
-}
-
-*{box-sizing:border-box}
-
-body{
-  margin:0;
-  min-height:100vh;
-  background:var(--bg);
-  color:var(--text);
-  font-family:Segoe UI,Tahoma,Arial,sans-serif;
-  padding:24px;
-}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--r);
-  box-shadow:var(--shadow);
-  padding:16px;
-  margin-bottom:16px;
-}
-
-textarea{
-  width:100%;
-  min-height:120px;
-  background:#000;
-  color:#fff;
-  border:1px solid var(--line);
-  padding:10px;
-  border-radius:10px;
-}
-
-button{
-  padding:10px 14px;
-  border-radius:10px;
-  border:1px solid var(--line);
-  background:#1c1c1c;
-  color:#fff;
-  cursor:pointer;
-}
-
-button.primary{
-  background:var(--btn);
-  font-weight:bold;
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quick EN → AR Translator</title>
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --card:#121212;
+      --text:#e6eef8;
+      --muted:#9aa4b2;
+      --accent:#1e90ff;
+      --r:12px;
+      --shadow:0 10px 30px rgba(0,0,0,.6);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;padding:28px;background:var(--bg);color:var(--text);
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    }
+    .wrap{max-width:900px;margin:0 auto}
+    h1{margin:6px 0 18px;color:var(--accent)}
+    .card{background:var(--card);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+    textarea, input[type="text"]{
+      width:100%;padding:12px;border-radius:8px;border:1px solid #222;background:#0b0b0b;color:var(--text);
+      resize:vertical;font-size:15px;
+    }
+    button{padding:10px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-weight:600}
+    .result{min-height:80px;padding:12px;border-radius:8px;border:1px solid #222;background:#050505;color:var(--text);direction:rtl;text-align:right}
+    .small{font-size:13px;color:var(--muted);margin-top:8px}
+    .row{display:flex;gap:8px;align-items:center}
+  </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <h1>English → Arabic Translator</h1>
 
-<h2>English → Arabic Translator 🌍</h2>
+    <div class="card">
+      <textarea id="text" placeholder="Type English word or short phrase here..."></textarea>
+      <div style="height:10px"></div>
+      <div class="row">
+        <button id="btn">Translate</button>
+        <div class="small">If the online API fails, a local fallback dictionary will be used automatically.</div>
+      </div>
+    </div>
 
-<div class="card">
-  <textarea id="text" placeholder="Type English word here..."></textarea>
-  <br><br>
-  <button class="primary" onclick="translate()">Translate</button>
-</div>
+    <div class="card">
+      <div class="result" id="result">Arabic translation will appear here...</div>
+      <div class="small" id="status">Ready.</div>
+    </div>
+  </div>
 
-<div class="card">
-  <textarea id="result" readonly placeholder="Arabic translation will appear here..."></textarea>
-</div> 
-  
 <script>
-async function translate() {
-  const text = document.getElementById("text").value.trim();
-  if (!text) return;
+/*
+  Strategy:
+  1) Try LibreTranslate POST (fast, allows CORS)
+  2) If network/error/timeout → fallback to local dictionary
+  3) This guarantees a visible translation when the API fails
+*/
 
-  const url = "https://libretranslate.de/translate";
+const btn = document.getElementById('btn');
+const txt = document.getElementById('text');
+const resEl = document.getElementById('result');
+const statusEl = document.getElementById('status');
 
-  try {
-    const res = await fetch(url, {
+const fallbackDict = {
+  "red":"أحمر",
+  "blue":"أزرق",
+  "green":"أخضر",
+  "black":"أسود",
+  "white":"أبيض",
+  "cat":"قطة",
+  "dog":"كلب",
+  "book":"كتاب",
+  "sun":"شمس",
+  "moon":"قمر",
+  "hello":"مرحبا",
+  "how are you":"كيف حالك",
+  "thank you":"شكراً",
+  "yes":"نعم",
+  "no":"لا",
+  "apple":"تفاحة",
+  "car":"سيارة",
+  "school":"مدرسة",
+  "water":"ماء"
+};
+
+// helper: fallback lookup (exact or single-word partial)
+function lookupFallback(input){
+  const key = input.trim().toLowerCase();
+  if(!key) return null;
+  if(fallbackDict[key]) return fallbackDict[key];
+  // try single-word if input contains spaces
+  const parts = key.split(/\s+/);
+  if(parts.length>1 && fallbackDict[parts[0]]) return fallbackDict[parts[0]];
+  return null;
+}
+
+async function translateHandler(){
+  const input = txt.value.trim();
+  if(!input){
+    statusEl.textContent = "Please enter text to translate.";
+    return;
+  }
+
+  statusEl.textContent = "Translating (online)...";
+  resEl.textContent = "";
+
+  // timeout helper
+  function fetchWithTimeout(url, options={}, timeout=6000){
+    const controller = new AbortController();
+    const id = setTimeout(()=>controller.abort(), timeout);
+    return fetch(url, {...options, signal: controller.signal}).finally(()=>clearTimeout(id));
+  }
+
+  // LibreTranslate endpoint (no API key required for public instance)
+  const apiUrl = "https://libretranslate.de/translate";
+
+  try{
+    const resp = await fetchWithTimeout(apiUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
-        q: text,
+        q: input,
         source: "en",
         target: "ar",
         format: "text"
       })
-    });
+    }, 7000); // 7s timeout
 
-    const data = await res.json();
-    document.getElementById("result").value = data.translatedText;
-  } catch (e) {
-    document.getElementById("result").value = "Translation error ❌";
+    if(!resp.ok) throw new Error("Network/Server error: "+resp.status);
+    const data = await resp.json();
+    if(data && data.translatedText){
+      resEl.textContent = data.translatedText;
+      statusEl.textContent = "Translated (live).";
+      return;
+    }else{
+      throw new Error("Invalid response");
+    }
+  }catch(err){
+    // fallback path
+    console.warn("Live translate failed:", err);
+    statusEl.textContent = "Live translate failed — using local fallback.";
+    const f = lookupFallback(input);
+    if(f){
+      resEl.textContent = f + "  (from local fallback)";
+    } else {
+      resEl.textContent = "Translation not found (API & local fallback failed).";
+    }
   }
 }
-</script>
 
+// attach
+btn.addEventListener('click', translateHandler);
+
+// also allow Enter inside textarea + ctrl+enter
+txt.addEventListener('keydown', function(e){
+  if((e.key === "Enter" && (e.ctrlKey || e.metaKey))) {
+    translateHandler();
+  }
+});
+</script>
 </body>
 </html>
